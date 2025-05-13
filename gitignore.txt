@@ -1,0 +1,41 @@
+# Python缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 虚拟环境
+venv/
+env/
+ENV/
+.env/
+.venv/
+blog_mvp/
+
+# IDE配置
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 日志文件
+*.log
+logs/
+
+# 数据库文件
+*.db
+*.sqlite3
+
+# 本地配置文件（可能包含敏感信息）
+.env
+config/local_settings.py
+
+# 临时文件
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# 系统文件
+.DS_Store
+Thumbs.db
