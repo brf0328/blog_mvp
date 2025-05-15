@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}管理分类和标签 - 博客系统{% endblock %}
+
+{% block content %}
+    <h1>管理分类和标签</h1>
+    
+    <div style="display: flex; gap: 30px; margin-top: 20px;">
+        <!-- 分类管理 -->
+        <div style="flex: 1;">
+            <h2>分类管理</h2>
+            
+            <form id="categoryForm" onsubmit="submitCategory(event)" style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="categoryName" placeholder="输入新分类名称" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                    <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">添加分类</button>
+                </div>
+            </form>
+            
+            <ul id="categoriesList" style="list-style: none; padding: 0;">
+                {% for category in categories %}
+                    <li style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee;">
+                        <span>{{ category.name }}</span>
+                        <button class="delete-category-btn" data-id="{{ category.id }}" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">删除</button>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <!-- 标签管理 -->
+        <div style="flex: 1;">
+            <h2>标签管理</h2>
+            
+            <form id="tagForm" onsubmit="submitTag(event)" style="margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="tagName" placeholder="输入新标签名称" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                    <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">添加标签</button>
+                </div>
+            </form>
+            
+            <ul id="tagsList" style="list-style: none; padding: 0;">
+                {% for tag in tags %}
+                    <li style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee;">
+                        <span>{{ tag.name }}</span>
+                        <button class="delete-tag-btn" data-id="{{ tag.id }}" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">删除</button>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // 页面加载完成后设置事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            // 分类删除按钮点击事件
+            document.querySelectorAll('.delete-category-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const categoryId = this.getAttribute('data-id');
+                    deleteCategory(categoryId);
+                });
+            });
+            
+            // 标签删除按钮点击事件
+            document.querySelectorAll('.delete-tag-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tagId = this.getAttribute('data-id');
+                    deleteTag(tagId);
+                });
+            });
+        });
+    
+        // 添加分类
+        async function submitCategory(event) {
+            event.preventDefault();
+            
+            const categoryName = document.getElementById('categoryName').value;
+            
+            try {
+                const response = await fetch('/api/categories/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: categoryName })
+                });
+                
+                if (response.ok) {
+                    // 刷新页面以显示新添加的分类
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('添加分类失败: ' + (error.detail || '未知错误'));
+                }
+            } catch (error) {
+                alert('发生错误: ' + error.message);
+            }
+        }
+        
+        // 删除分类
+        async function deleteCategory(categoryId) {
+            if (!confirm('确定要删除这个分类吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/categories/${categoryId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    // 刷新页面以更新分类列表
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('删除分类失败: ' + (error.detail || '未知错误'));
+                }
+            } catch (error) {
+                alert('发生错误: ' + error.message);
+            }
+        }
+        
+        // 添加标签
+        async function submitTag(event) {
+            event.preventDefault();
+            
+            const tagName = document.getElementById('tagName').value;
+            
+            try {
+                const response = await fetch('/api/tags/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: tagName })
+                });
+                
+                if (response.ok) {
+                    // 刷新页面以显示新添加的标签
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('添加标签失败: ' + (error.detail || '未知错误'));
+                }
+            } catch (error) {
+                alert('发生错误: ' + error.message);
+            }
+        }
+        
+        // 删除标签
+        async function deleteTag(tagId) {
+            if (!confirm('确定要删除这个标签吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/tags/${tagId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    // 刷新页面以更新标签列表
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('删除标签失败: ' + (error.detail || '未知错误'));
+                }
+            } catch (error) {
+                alert('发生错误: ' + error.message);
+            }
+        }
+    </script>
+{% endblock %} 

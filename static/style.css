@@ -1,0 +1,25 @@
+/* 基本样式，大部分已经在基础模板中定义了 */
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown-content code {
+  background-color: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.markdown-content pre {
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #ddd;
+  padding-left: 10px;
+  color: #666;
+} 

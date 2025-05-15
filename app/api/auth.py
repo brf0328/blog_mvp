@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Response, Depends, status
+from fastapi import APIRouter, HTTPException, Response, Depends, status, Cookie
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
@@ -24,6 +24,40 @@ class UserLogin(BaseModel):
 class UserInfo(BaseModel):
     username: str
     email: str
+
+# 用于API的认证依赖
+async def get_current_user(session_id: Optional[str] = Cookie(None)):
+    """获取当前登录用户，如果未登录则抛出异常"""
+    if not session_id or not session_id.startswith("session_"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="未登录或会话已过期",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    try:
+        user_id = int(session_id.replace("session_", ""))
+        user = await User.get(id=user_id)
+        return user
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="未登录或会话已过期",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+# 用于前端页面的可选认证依赖
+async def get_current_user_optional(session_id: Optional[str] = Cookie(None)):
+    """获取当前登录用户，如果未登录则返回None"""
+    if not session_id or not session_id.startswith("session_"):
+        return None
+    
+    try:
+        user_id = int(session_id.replace("session_", ""))
+        user = await User.get(id=user_id)
+        return user
+    except:
+        return None
 
 # 注册接口
 @atomic
@@ -67,7 +101,7 @@ async def register(user_data: UserRegister):
 # 登录接口
 @atomic
 @router.post("/login", response_model=UserLogin)
-async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(),grant_type:str="password"):#自动获取表单数据
+async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
     """
     用户登录接口
     
@@ -101,7 +135,7 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
         key="session_id",
         value=session_id,
         httponly=True,#cookie只允许被http协议访问
-        max_age=1800,  # 30分钟过期
+        max_age=180000,  # 30分钟过期
         samesite="lax"#防止跨站攻击
     )
     
@@ -114,26 +148,6 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
 
 # 获取当前用户信息
 @router.get("/me", response_model=UserInfo)
-async def get_current_user(session_id: Optional[str] = None):
+async def get_current_user_info(user: User = Depends(get_current_user)):
     """获取当前登录用户信息"""
-    # 这里应该根据会话ID获取用户信息
-    # 在实际应用中，需要使用JWT或其他会话管理方式
-    
-    # 示例逻辑，实际应用中需要替换成真实的会话验证逻辑
-    if not session_id or not session_id.startswith("session_"):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="未登录或会话已过期",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    try:
-        user_id = int(session_id.replace("session_", ""))
-        user = await User.get(id=user_id)
-        return {"username": user.username, "email": user.email}
-    except:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="未登录或会话已过期",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) 
+    return {"username": user.username, "email": user.email} 

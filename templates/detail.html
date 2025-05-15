@@ -1,0 +1,53 @@
+<!--父类继承-->
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - 博客系统{% endblock %}
+
+{% block content %}
+    <article class="post">
+        <h1>{{ post.title }}</h1>
+        
+        <div class="post-meta">
+            <span>作者: {{ post.author.username }}</span> | 
+            <span>发布于: {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</span> |
+            <span>更新于: {{ post.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            
+            {% if post.categories %}
+            | 
+            <span>分类: 
+                {% for category in post.categories %}
+                    <a href="/?category_id={{ category.id }}">{{ category.name }}</a>{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </span>
+            {% endif %}
+            
+            {% if post.tags %}
+            | 
+            <span>标签: 
+                {% for tag in post.tags %}
+                    <a href="/?tag_id={{ tag.id }}">{{ tag.name }}</a>{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </span>
+            {% endif %}
+        </div>
+        
+        {% if user and user.id == post.author_id %}
+            <div class="post-actions" style="margin: 15px 0;">
+                <a href="/posts/edit/{{ post.id }}" style="display: inline-block; background-color: #007bff; color: white; padding: 5px 10px; text-decoration: none; margin-right: 10px;">编辑文章</a>
+                
+                <form method="post" action="/api/posts/{{ post.id }}" style="display: inline-block;">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer;" onclick="return confirm('确定要删除这篇文章吗？')">删除文章</button>
+                </form>
+            </div>
+        {% endif %}
+        
+        <div class="post-content">
+            {{ post.content_html | safe }}
+        </div>
+        
+        <p style="margin-top: 30px;">
+            <a href="/" style="color: #007bff; text-decoration: none;">&larr; 返回首页</a>
+        </p>
+    </article>
+{% endblock %} 

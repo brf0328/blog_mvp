@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '编辑文章' if post else '创建新文章' }} - 博客系统{% endblock %}
+
+{% block content %}
+    <h1>{{ '编辑文章' if post else '创建新文章' }}</h1>
+    
+    <form id="postForm" onsubmit="submitPost(event)">
+        <div style="margin-bottom: 15px;">
+            <label for="title" style="display: block; margin-bottom: 5px; font-weight: bold;">标题</label>
+            <input type="text" id="title" name="title" value="{{ post.title if post else '' }}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="content" style="display: block; margin-bottom: 5px; font-weight: bold;">内容 (Markdown)</label>
+            <textarea id="content" name="content" style="width: 100%; height: 300px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">{{ post.content_markdown if post else '' }}</textarea>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">分类</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                {% for category in categories %}
+                    <label style="display: inline-flex; align-items: center; margin-right: 15px;">
+                        <input type="checkbox" name="categories" value="{{ category.id }}" 
+                            {% if post and category in post.categories %}checked{% endif %}>
+                        <span style="margin-left: 5px;">{{ category.name }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+            <!-- 显示当前选中的分类ID -->
+            <div id="selected-categories" style="color: #666; margin-top: 5px; font-size: 0.9em;"></div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">标签</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                {% for tag in tags %}
+                    <label style="display: inline-flex; align-items: center; margin-right: 15px;">
+                        <input type="checkbox" name="tags" value="{{ tag.id }}" 
+                            {% if post and tag in post.tags %}checked{% endif %}>
+                        <span style="margin-left: 5px;">{{ tag.name }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+            <!-- 显示当前选中的标签ID -->
+            <div id="selected-tags" style="color: #666; margin-top: 5px; font-size: 0.9em;"></div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: inline-flex; align-items: center;">
+                <input type="checkbox" id="is_published" name="is_published" {% if post and post.is_published %}checked{% endif %}>
+                <span style="margin-left: 5px;">发布文章</span>
+            </label>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer;">保存</button>
+            <a href="{% if post %}/posts/{{ post.id }}{% else %}/{% endif %}" style="background-color: #6c757d; color: white; text-decoration: none; padding: 10px 15px; border-radius: 4px;">取消</a>
+        </div>
+    </form>
+    
+    <div id="preview" style="margin-top: 30px;">
+        <h2>预览</h2>
+        <div id="preview-content" class="markdown-content"></div>
+    </div>
+    
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener("DOMContentLoaded", function() {
+            // 初始化SimpleMDE编辑器
+            const simplemde = new SimpleMDE({
+                element: document.getElementById("content"),
+                spellChecker: false,
+                autosave: {
+                    enabled: true,
+                    uniqueId: "post-editor",
+                    delay: 1000,
+                }
+            });
+            
+            // 监听内容变化，实时更新预览
+            simplemde.codemirror.on("change", function() {
+                updatePreview();
+            });
+            
+            // 监听分类和标签选择变化
+            document.querySelectorAll('input[name="categories"], input[name="tags"]').forEach(input => {
+                input.addEventListener('change', updateSelectionDisplay);
+            });
+            
+            // 初始加载时更新预览和选择显示
+            updatePreview();
+            updateSelectionDisplay();
+            
+            function updatePreview() {
+                document.getElementById('preview-content').innerHTML = simplemde.markdown(simplemde.value());
+            }
+            
+            function updateSelectionDisplay() {
+                // 更新显示选中的分类和标签
+                const selectedCategories = Array.from(document.querySelectorAll('input[name="categories"]:checked'))
+                    .map(el => `${el.value} (${el.nextElementSibling.textContent.trim()})`);
+                
+                const selectedTags = Array.from(document.querySelectorAll('input[name="tags"]:checked'))
+                    .map(el => `${el.value} (${el.nextElementSibling.textContent.trim()})`);
+                
+                document.getElementById('selected-categories').textContent = 
+                    selectedCategories.length > 0 ? `已选分类: ${selectedCategories.join(', ')}` : '未选择分类';
+                
+                document.getElementById('selected-tags').textContent = 
+                    selectedTags.length > 0 ? `已选标签: ${selectedTags.join(', ')}` : '未选择标签';
+            }
+            
+            // 将submitPost函数添加为全局函数，以便表单提交时调用
+            window.submitPost = async function(event) {
+                event.preventDefault();
+                
+                // 获取表单数据
+                const title = document.getElementById('title').value;
+                const content_markdown = simplemde.value();
+                const is_published = document.getElementById('is_published').checked;
+                
+                // 获取选中的分类和标签
+                const categoryElements = document.querySelectorAll('input[name="categories"]:checked');
+                const tagElements = document.querySelectorAll('input[name="tags"]:checked');
+                
+                const category_ids = Array.from(categoryElements).map(el => parseInt(el.value));
+                const tag_ids = Array.from(tagElements).map(el => parseInt(el.value));
+                
+                const data = {
+                    title,
+                    content_markdown,
+                    is_published,
+                    category_ids,
+                    tag_ids
+                };
+                
+                console.log('发送数据:', data); // 调试: 在控制台显示发送的数据
+                
+                try {
+                    let url = '/api/posts/';
+                    let method = 'POST';
+                    
+                    {% if post %}
+                    url = '/api/posts/{{ post.id }}';
+                    method = 'PUT';
+                    {% endif %}
+                    
+                    console.log(`请求: ${method} ${url}`); // 调试: 显示请求方法和URL
+                    
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('请求成功:', result); // 调试: 显示成功响应
+                        window.location.href = '/posts/' + result.id;
+                    } else {
+                        const error = await response.json();
+                        console.error('请求失败:', error); // 调试: 显示错误响应
+                        alert('保存失败: ' + (error.detail || '未知错误'));
+                    }
+                } catch (error) {
+                    console.error('发生异常:', error); // 调试: 显示捕获的异常
+                    alert('发生错误: ' + error.message);
+                }
+            };
+        });
+    </script>
+{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+{% endblock %} 

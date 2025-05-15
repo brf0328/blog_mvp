@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - 博客系统{% endblock %}
+
+{% block content %}
+    <div style="max-width: 400px; margin: 0 auto; padding: 20px;">
+        <h1 style="text-align: center; margin-bottom: 20px;">用户登录</h1>
+        
+        <div id="error-message" style="color: #dc3545; margin-bottom: 15px; display: none;"></div>
+        
+        <form id="login-form" onsubmit="submitLogin(event)">
+            <div style="margin-bottom: 15px;">
+                <label for="username" style="display: block; margin-bottom: 5px;">用户名</label>
+                <input type="text" id="username" name="username" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="password" style="display: block; margin-bottom: 5px;">密码</label>
+                <input type="password" id="password" name="password" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <button type="submit" style="width: 100%; background-color: #007bff; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer;">登录</button>
+            </div>
+            
+            <p style="text-align: center;">
+                还没有账号？ <a href="/register" style="color: #007bff; text-decoration: none;">立即注册</a>
+            </p>
+        </form>
+    </div>
+    
+    <script>
+        async function submitLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // 构建表单数据对象
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    // 登录成功，重定向到首页
+                    window.location.href = '/';
+                } else {
+                    // 显示错误信息
+                    const error = await response.json();
+                    const errorMessage = document.getElementById('error-message');
+                    errorMessage.textContent = error.detail || '登录失败，请检查用户名和密码';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('登录请求失败:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = '网络错误，请稍后重试';
+                errorMessage.style.display = 'block';
+            }
+        }
+    </script>
+{% endblock %} 
