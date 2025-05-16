@@ -2,64 +2,133 @@
 
 {% block title %}{{ '编辑文章' if post else '创建新文章' }} - 博客系统{% endblock %}
 
+{% block head_extra %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+    <style>
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-textarea {
+            width: 100%;
+            height: 300px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .checkbox-text {
+            margin-left: 5px;
+        }
+        .selection-info {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+        }
+        .preview-section {
+            margin-top: 30px;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
     <h1>{{ '编辑文章' if post else '创建新文章' }}</h1>
     
     <form id="postForm" onsubmit="submitPost(event)">
-        <div style="margin-bottom: 15px;">
-            <label for="title" style="display: block; margin-bottom: 5px; font-weight: bold;">标题</label>
-            <input type="text" id="title" name="title" value="{{ post.title if post else '' }}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+        <div class="form-group">
+            <label for="title" class="form-label">标题</label>
+            <input type="text" id="title" name="title" value="{{ post.title if post else '' }}" class="form-control" required>
         </div>
         
-        <div style="margin-bottom: 15px;">
-            <label for="content" style="display: block; margin-bottom: 5px; font-weight: bold;">内容 (Markdown)</label>
-            <textarea id="content" name="content" style="width: 100%; height: 300px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">{{ post.content_markdown if post else '' }}</textarea>
+        <div class="form-group">
+            <label for="content" class="form-label">内容 (Markdown)</label>
+            <textarea id="content" name="content" class="form-textarea">{{ post.content_markdown if post else '' }}</textarea>
         </div>
         
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">分类</label>
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <div class="form-group">
+            <label class="form-label">分类</label>
+            <div class="checkbox-group">
                 {% for category in categories %}
-                    <label style="display: inline-flex; align-items: center; margin-right: 15px;">
+                    <label class="checkbox-label">
                         <input type="checkbox" name="categories" value="{{ category.id }}" 
                             {% if post and category in post.categories %}checked{% endif %}>
-                        <span style="margin-left: 5px;">{{ category.name }}</span>
+                        <span class="checkbox-text">{{ category.name }}</span>
                     </label>
                 {% endfor %}
             </div>
             <!-- 显示当前选中的分类ID -->
-            <div id="selected-categories" style="color: #666; margin-top: 5px; font-size: 0.9em;"></div>
+            <div id="selected-categories" class="selection-info"></div>
         </div>
         
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: bold;">标签</label>
-            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <div class="form-group">
+            <label class="form-label">标签</label>
+            <div class="checkbox-group">
                 {% for tag in tags %}
-                    <label style="display: inline-flex; align-items: center; margin-right: 15px;">
+                    <label class="checkbox-label">
                         <input type="checkbox" name="tags" value="{{ tag.id }}" 
                             {% if post and tag in post.tags %}checked{% endif %}>
-                        <span style="margin-left: 5px;">{{ tag.name }}</span>
+                        <span class="checkbox-text">{{ tag.name }}</span>
                     </label>
                 {% endfor %}
             </div>
             <!-- 显示当前选中的标签ID -->
-            <div id="selected-tags" style="color: #666; margin-top: 5px; font-size: 0.9em;"></div>
+            <div id="selected-tags" class="selection-info"></div>
         </div>
         
-        <div style="margin-bottom: 20px;">
-            <label style="display: inline-flex; align-items: center;">
+        <div class="form-group">
+            <label class="checkbox-label">
                 <input type="checkbox" id="is_published" name="is_published" {% if post and post.is_published %}checked{% endif %}>
-                <span style="margin-left: 5px;">发布文章</span>
+                <span class="checkbox-text">发布文章</span>
             </label>
         </div>
         
-        <div style="display: flex; gap: 10px;">
-            <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer;">保存</button>
-            <a href="{% if post %}/posts/{{ post.id }}{% else %}/{% endif %}" style="background-color: #6c757d; color: white; text-decoration: none; padding: 10px 15px; border-radius: 4px;">取消</a>
+        <div class="button-group">
+            <button type="submit" class="btn-primary">保存</button>
+            <a href="{% if post %}/posts/{{ post.id }}{% else %}/{% endif %}" class="btn-secondary">取消</a>
         </div>
     </form>
     
-    <div id="preview" style="margin-top: 30px;">
+    <div id="preview" class="preview-section">
         <h2>预览</h2>
         <div id="preview-content" class="markdown-content"></div>
     </div>
@@ -172,9 +241,4 @@
             };
         });
     </script>
-{% endblock %}
-
-{% block head_extra %}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
-    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
 {% endblock %} 

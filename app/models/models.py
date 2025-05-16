@@ -53,6 +53,7 @@ class Tag(Model):
     """标签表"""
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=50, unique=True,description="标签名称")
+    creator_id = fields.IntField(null=True, description="创建者ID")
     
     class Meta:
         table = "tag"

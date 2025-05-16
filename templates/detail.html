@@ -3,6 +3,39 @@
 
 {% block title %}{{ post.title }} - 博客系统{% endblock %}
 
+{% block head_extra %}
+<style>
+    .post-actions {
+        margin: 15px 0;
+    }
+    .btn-edit {
+        display: inline-block;
+        background-color: #007bff;
+        color: white;
+        padding: 5px 10px;
+        text-decoration: none;
+        margin-right: 10px;
+    }
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+    .delete-form {
+        display: inline-block;
+    }
+    .back-link {
+        margin-top: 30px;
+    }
+    .back-link a {
+        color: #007bff;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
     <article class="post">
         <h1>{{ post.title }}</h1>
@@ -32,12 +65,12 @@
         </div>
         
         {% if user and user.id == post.author_id %}
-            <div class="post-actions" style="margin: 15px 0;">
-                <a href="/posts/edit/{{ post.id }}" style="display: inline-block; background-color: #007bff; color: white; padding: 5px 10px; text-decoration: none; margin-right: 10px;">编辑文章</a>
+            <div class="post-actions">
+                <a href="/posts/edit/{{ post.id }}" class="btn-edit">编辑文章</a>
                 
-                <form method="post" action="/api/posts/{{ post.id }}" style="display: inline-block;">
+                <form method="post" action="/api/posts/{{ post.id }}" class="delete-form">
                     <input type="hidden" name="_method" value="DELETE">
-                    <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer;" onclick="return confirm('确定要删除这篇文章吗？')">删除文章</button>
+                    <button type="submit" class="btn-delete" onclick="return confirm('确定要删除这篇文章吗？')">删除文章</button>
                 </form>
             </div>
         {% endif %}
@@ -46,8 +79,8 @@
             {{ post.content_html | safe }}
         </div>
         
-        <p style="margin-top: 30px;">
-            <a href="/" style="color: #007bff; text-decoration: none;">&larr; 返回首页</a>
+        <p class="back-link">
+            <a href="/">&larr; 返回首页</a>
         </p>
     </article>
 {% endblock %} 
